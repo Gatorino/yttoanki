@@ -22,18 +22,26 @@ def extract_video_id(url):
 
 def get_youtube_transcript(video_id):
     try:
+        # 1. Create the API instance
         api = YouTubeTranscriptApi()
-        transcript_list = api.list(video_id)
 
-        # This returns a "FetchedTranscript" object
+        # 2. List transcripts using your personal cookies to avoid the "Cloud Block"
+        # Make sure cookies.txt or cookies.json is in your project folder
+        transcript_list = api.list(video_id, cookies='cookies.json')
+
+        # 3. Find and fetch the transcript object (as you correctly identified)
         transcript_obj = transcript_list.find_transcript(['en', 'fr']).fetch()
 
-        # Access .text as an attribute, not a dictionary key
+        # 4. Use the .text attribute for each snippet
         full_text = " ".join([snippet.text for snippet in transcript_obj])
+
         return full_text
 
     except Exception as e:
-        st.error(f"Could not retrieve transcript. Error: {e}")
+        # Friendly tip for your personal use
+        st.error(f"Transcript Error: {e}")
+        st.info(
+            "Tip: If you're on Streamlit Cloud, make sure your cookies.json is valid and NOT expired.")
         return None
 
 

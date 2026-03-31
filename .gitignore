@@ -2,6 +2,7 @@
 # Byte-compiled / optimized / DLL files
 secrets.toml
 *.apkg
+*.json
 __pycache__/
 *.py[cod]
 *$py.class
