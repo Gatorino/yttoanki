@@ -7,6 +7,12 @@ import pandas as pd
 import re
 import os
 
+password_input = st.sidebar.text_input("Enter Access Code", type="password")
+
+if password_input != st.secrets["MY_PASSWORD"]:
+    st.warning("Please enter the correct access code to use the AI Generator.")
+    st.stop()  # This stops the rest of the app from running
+
 # Access the key using dictionary notation
 openai_api_key = st.secrets["OPENAI_API_KEY"]
 
@@ -23,11 +29,11 @@ def extract_video_id(url):
 def get_youtube_transcript(video_id):
     try:
         # 1. Create the API instance
-        api = YouTubeTranscriptApi()
+        api = YouTubeTranscriptApi(cookies='cookies.json')
 
         # 2. List transcripts using your personal cookies to avoid the "Cloud Block"
         # Make sure cookies.txt or cookies.json is in your project folder
-        transcript_list = api.list(video_id, cookies='cookies.json')
+        transcript_list = api.list(video_id)
 
         # 3. Find and fetch the transcript object (as you correctly identified)
         transcript_obj = transcript_list.find_transcript(['en', 'fr']).fetch()
