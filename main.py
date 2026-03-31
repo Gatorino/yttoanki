@@ -27,9 +27,13 @@ def extract_video_id(url):
 
 
 def get_youtube_transcript(video_id):
+    cookie_path = "temp_cookies.json"
     try:
+        if "COOKIE_DATA" in st.secrets:
+            with open(cookie_path, "w") as f:
+                f.write(st.secrets["COOKIE_DATA"])
         # 1. Create the API instance
-        api = YouTubeTranscriptApi(cookies='cookies.json')
+        api = YouTubeTranscriptApi(cookies=cookie_path)
 
         # 2. List transcripts using your personal cookies to avoid the "Cloud Block"
         # Make sure cookies.txt or cookies.json is in your project folder
