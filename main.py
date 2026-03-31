@@ -100,30 +100,53 @@ if url:
                     st.session_state.last_id = video_id
 
         if "topics" in st.session_state:
-            st.subheader("Choose a topic to master:")
-            selected_topic = st.selectbox(
-                "Relevant Topics Found:", st.session_state.topics)
+            st.subheader("Choose your topics:")
+            # Changed from selectbox to multiselect
+            selected_topics = st.multiselect(
+                "Select one or more topics to include in your deck:",
+                options=st.session_state.topics,
+                default=None
+            )
 
             if st.button("Generate Detailed Flashcards"):
-                with st.spinner(f"Generating comprehensive cards for {selected_topic}..."):
-                    cards = generate_flashcards(
-                        st.session_state.transcript, selected_topic)
+                if not selected_topics:
+                    st.warning("Please select at least one topic.")
+                else:
+                    all_cards = []
+                    # Progress bar for better UX since multiple topics take longer
+                    progress_bar = st.progress(0)
 
-                    if cards:
-                        st.success(f"Generated {len(cards)} flashcards!")
-                        df = pd.DataFrame(
-                            cards, columns=['Question', 'Answer'])
-                        st.dataframe(df, use_container_width=True)
+                    for i, topic in enumerate(selected_topics):
+                        with st.spinner(f"Generating cards for: {topic}..."):
+                            topic_cards = generate_flashcards(
+                                st.session_state.transcript, topic)
+                            all_cards.extend(topic_cards)
 
-                        deck_file = create_anki_deck(cards, selected_topic)
+                        # Update progress
+                        progress_bar.progress((i + 1) / len(selected_topics))
+
+                    if all_cards:
+                        st.success(
+                            f"Generated a total of {len(all_cards)} flashcards!")
+
+                        # Show preview in an expandable section to keep UI clean
+                        with st.expander("Preview Flashcards"):
+                            df = pd.DataFrame(all_cards, columns=[
+                                'Question', 'Answer'])
+                            st.table(df)
+
+                        # Create a combined deck name
+                        deck_name = "Combined_YT_Deck" if len(
+                            selected_topics) > 1 else selected_topics[0]
+                        deck_file = create_anki_deck(all_cards, deck_name)
 
                         with open(deck_file, "rb") as f:
                             st.download_button(
-                                label="💾 Download Anki Deck",
+                                label="💾 Download Combined Anki Deck",
                                 data=f,
                                 file_name=deck_file,
                                 mime="application/octet-stream"
                             )
                     else:
                         st.error(
-                            "The AI didn't return any cards. Try a different topic.")
+                            "The AI didn't return any cards. Try different topics.")
