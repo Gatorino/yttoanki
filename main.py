@@ -101,16 +101,25 @@ def create_anki_deck(cards, deck_name):
 
 
 # --- STREAMLIT UI ---
-st.set_page_config(page_title="AI Flashcard Generator", page_icon="🎴")
+st.set_page_config(page_title="AI Flashcard Generator",
+                   page_icon="🎴", layout="centered")
 st.title("🎴 YouTube to Comprehensive Anki Decks")
+st.markdown(
+    "Use this app on mobile with portrait mode for the easiest experience. Paste your YouTube URL, pick relevant topics, and download the Anki deck directly to your device."
+)
 
-url = st.text_input("Paste YouTube URL here:")
+with st.form("video_form"):
+    url = st.text_input(
+        "Paste YouTube URL here:",
+        placeholder="https://www.youtube.com/watch?v=...",
+        help="A valid YouTube video URL is required to extract the transcript."
+    )
+    st.form_submit_button("Analyze Video")
 
 if url:
     video_id = extract_video_id(url)
 
     if video_id:
-        # Cache the transcript so it doesn't reload on every click
         if "transcript" not in st.session_state or st.session_state.get('last_id') != video_id:
             with st.spinner("Analyzing video content..."):
                 text = get_youtube_transcript(video_id)
@@ -120,12 +129,11 @@ if url:
                     st.session_state.last_id = video_id
 
         if "topics" in st.session_state:
-            st.subheader("Choose your topics:")
-            # Changed from selectbox to multiselect
+            st.subheader("Choose your topics")
             selected_topics = st.multiselect(
                 "Select one or more topics to include in your deck:",
                 options=st.session_state.topics,
-                default=None
+                default=[]
             )
 
             if st.button("Generate Detailed Flashcards"):
@@ -133,7 +141,6 @@ if url:
                     st.warning("Please select at least one topic.")
                 else:
                     all_cards = []
-                    # Progress bar for better UX since multiple topics take longer
                     progress_bar = st.progress(0)
 
                     for i, topic in enumerate(selected_topics):
@@ -141,28 +148,25 @@ if url:
                             topic_cards = generate_flashcards(
                                 st.session_state.transcript, topic)
                             all_cards.extend(topic_cards)
-
-                        # Update progress
                         progress_bar.progress((i + 1) / len(selected_topics))
 
                     if all_cards:
-                        st.success(
-                            f"Generated a total of {len(all_cards)} flashcards!")
-
-                        # Show preview in an expandable section to keep UI clean
+                        st.success(f"Generated {len(all_cards)} flashcards!")
+                        st.markdown(
+                            "### Preview your flashcards\nTap the expander below to review a sample before downloading."
+                        )
                         with st.expander("Preview Flashcards"):
                             df = pd.DataFrame(all_cards, columns=[
-                                'Question', 'Answer'])
-                            st.table(df)
+                                              'Question', 'Answer'])
+                            st.dataframe(df, use_container_width=True)
 
-                        # Create a combined deck name
                         deck_name = "Combined_YT_Deck" if len(
                             selected_topics) > 1 else selected_topics[0]
                         deck_file = create_anki_deck(all_cards, deck_name)
 
                         with open(deck_file, "rb") as f:
                             st.download_button(
-                                label="💾 Download Combined Anki Deck",
+                                label="💾 Download Anki Deck",
                                 data=f,
                                 file_name=deck_file,
                                 mime="application/octet-stream"
