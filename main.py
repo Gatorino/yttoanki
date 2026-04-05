@@ -35,17 +35,17 @@ def get_youtube_transcript(video_id):
             with open(cookie_path, "wb") as f:
                 f.write(cookie_bytes)
         # 1. Create the API instance
-        api = YouTubeTranscriptApi(cookies=cookie_path)
+        api = YouTubeTranscriptApi()
 
-        # 2. List transcripts using your personal cookies to avoid the "Cloud Block"
-        # Make sure cookies.txt or cookies.json is in your project folder
-        transcript_list = api.list(video_id)
+        # 2. Pass the cookies path directly to the list_transcripts method
+        transcript_list = api.list_transcripts(video_id, cookies=cookie_path)
+        # ----------------------
 
-        # 3. Find and fetch the transcript object (as you correctly identified)
+        # 3. Find and fetch the transcript object
         transcript_obj = transcript_list.find_transcript(['en', 'fr']).fetch()
 
-        # 4. Use the .text attribute for each snippet
-        full_text = " ".join([snippet.text for snippet in transcript_obj])
+        # 4. Join the text
+        full_text = " ".join([snippet['text'] for snippet in transcript_obj])
 
         return full_text
 
