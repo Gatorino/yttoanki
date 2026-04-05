@@ -35,20 +35,17 @@ def get_youtube_transcript(video_id):
             with open(cookie_path, "wb") as f:
                 f.write(cookie_bytes)
         # 1. Create the API instance
-        api = YouTubeTranscriptApi()
+        transcript_list = YouTubeTranscriptApi.list_transcripts(
+            video_id, cookies=cookie_path)
 
-        # 2. Pass the cookies path directly to the list_transcripts method
-        transcript_list = api.list_transcripts(video_id, cookies=cookie_path)
-        # ----------------------
-
-        # 3. Find and fetch the transcript object
+        # Find and fetch the transcript object
         transcript_obj = transcript_list.find_transcript(['en', 'fr']).fetch()
 
-        # 4. Join the text
+        # IMPORTANT: .fetch() returns a list of DICTIONARIES, not objects
+        # Use snippet['text'], NOT snippet.text
         full_text = " ".join([snippet['text'] for snippet in transcript_obj])
 
         return full_text
-
     except Exception as e:
         # Friendly tip for your personal use
         st.error(f"Transcript Error: {e}")
