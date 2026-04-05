@@ -1,3 +1,4 @@
+import base64
 import streamlit as st
 import openai
 from openai import OpenAI
@@ -30,8 +31,9 @@ def get_youtube_transcript(video_id):
     cookie_path = "temp_cookies.json"
     try:
         if "COOKIE_DATA" in st.secrets:
-            with open(cookie_path, "w") as f:
-                f.write(st.secrets["COOKIE_DATA"])
+            cookie_bytes = base64.b64decode(st.secrets["COOKIE_DATA"])
+            with open(cookie_path, "wb") as f:
+                f.write(cookie_bytes)
         # 1. Create the API instance
         api = YouTubeTranscriptApi(cookies=cookie_path)
 
